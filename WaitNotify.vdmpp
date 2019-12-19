@@ -1,0 +1,35 @@
+class WaitNotify
+-- la classe qui permet la gestion des threads 
+
+instance variables
+	Waitset : set of nat := {}
+
+operations
+	public Wait : () ==> ()
+	Wait() ==
+	(AddToWaitSet(threadid); Awake());
+	
+	public Notify : () ==> ()
+	Notify() ==
+	let p in set Waitset in 
+	Waitset := Waitset \ {p};
+	
+	public NotifyThread : nat ==> ()
+	NotifyThread(p) ==
+	Waitset := Waitset \ {p};
+	
+	public NotifyAll : () ==> ()
+	NotifyAll() ==
+	Waitset := {};
+	
+	private AddToWaitSet : nat ==> ()
+	AddToWaitSet(p) ==
+	Waitset := Waitset union {p};
+	
+	private Awake: () ==> ()
+	Awake() == skip;
+	
+sync
+	per Awake => threadid not in set Waitset;
+	mutex(AddToWaitSet)
+end WaitNotify

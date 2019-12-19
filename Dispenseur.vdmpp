@@ -1,0 +1,26 @@
+class Dispenseur
+--classe pour modeliser les Regulateurs
+instance variables
+
+protected ID	: nat;   -- identit�
+protected Type	: Controleur`typeActeur;  --type d'Regulateur
+protected Env	: Contexte;         -- environnement du regulateur
+protected periode : nat1 := 1;
+protected estPeriodique : bool := true;
+
+operations
+--donne l'identit� d'un Regulateur
+public GetID: () ==> nat
+	GetID() ==
+		return ID;
+		
+--donne le type d'un Regulateur
+public GetType: () ==> Controleur`typeActeur
+	GetType() ==
+		return Type;
+
+protected Action: () ==> ()
+Action() ==
+	is subclass responsibility
+
+end Dispenseur

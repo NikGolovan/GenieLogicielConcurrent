@@ -1,0 +1,54 @@
+class Contexte
+--classe cible (objet passif) pour synchroniser les threads
+instance variables
+-- variables environnement: temp�rature et pression
+private envTemp	 : nat;
+private envPression : nat;
+-- variables environnement: distance, longitude et latitude
+private envDistance : nat := 0;
+private envLatitude : nat := 0;
+private envLongitude : nat := 0;
+
+operations
+-- fixe une valeur initiale de temperatute et de  pression
+public Contexte: int * int  ==> Contexte
+Contexte( temperature0, pression0) ==
+ (envTemp := temperature0;
+  envPression := pression0;
+ );
+ 
+-- les getters et setters pour les veriables d'environnement
+public SetDistance: nat ==> ()
+SetDistance(d) ==
+  envDistance := d;
+
+public SetLatitude: nat ==> ()
+SetLatitude(la) ==
+  envLatitude:= la;
+
+public SetLongitude: nat ==> ()
+SetLongitude(lo) ==
+  envLongitude:= lo;
+
+public ReadDistance: () ==> nat
+ReadDistance() ==
+  return envDistance;
+  
+public ReadLatitude: () ==> nat
+ReadLatitude() ==
+  return envLatitude;
+  
+public ReadLongitude: () ==> nat
+ReadLongitude() ==
+  return envLongitude;
+
+sync
+-- proteger les variables au niveau d'execution des threads
+	mutex(SetDistance);
+	mutex(ReadDistance);
+	mutex(SetLatitude);
+	mutex(ReadLatitude);
+	mutex(SetLongitude);
+	mutex(ReadLongitude);
+	
+end Contexte

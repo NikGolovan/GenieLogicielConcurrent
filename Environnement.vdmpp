@@ -1,0 +1,97 @@
+class Environnement 
+
+
+-- l'environnement: reservoir + carburant
+--nous sommes dans un cas typique o� c'est l'environnement qui dirige le flux de contr�le
+types
+-- chaque donn�e d'entr�e: Temp�rature, Pression, Date
+public data	= int * int * int * nat
+
+instance variables
+protected periode : nat1 := 1;
+protected estPeriodique : bool := true;
+
+--les entr�es/sorties
+private io       : IO := new IO();
+private datas	 : seq of data := [];
+
+--dur�e de simulation
+private Dur�eSimulation	 : nat;
+private fini : bool := false   -- indicateur de fin de flux de donn�es(stimuli)   environnement -> systeme de regulation
+
+
+operations
+
+public Environnement: seq of char * nat1 * bool ==> Environnement
+Environnement(nomFichier, p, estP) ==
+ (periode := p;
+  estPeriodique := estP;
+  let mk_(-,mk_(dur�e, input)) = io.freadval[nat * seq of data](nomFichier) 
+  in
+   (datas := input;
+    Dur�eSimulation:= dur�e;
+   );
+    IO`print("\n************************************************************************************************************************");
+    IO`print("\n---------------- Les capteurs ont ete actives et sont a l'ecoute de menace ----------------");  IO`print("\n");                     		
+    IO`print("          d= ");IO`print(SystemeRTP`leContexte.ReadDistance()); IO`print("      la=");  IO`print(SystemeRTP`leContexte.ReadLatitude()) ; IO`print("      lo=");  IO`print(SystemeRTP`leContexte.ReadLongitude()) ;                                
+    IO`print("\n************************************************************************************************************************");  
+ );
+ 
+private stimuli: () ==> ()
+stimuli() ==
+ (if len datas > 0
+  then (dcl dateActuelle : nat :=Animation`horloge.GetTime();
+        let mk_(distance, latitude, longitude, date) = hd datas
+         in
+           (if date =  dateActuelle 
+           then (SystemeRTP`leContexte.SetDistance(distance);
+                SystemeRTP`leContexte.SetLatitude(latitude);  
+                SystemeRTP`leContexte.SetLongitude(longitude);  
+           IO`print("\n************************************************************************************************************************");
+           IO`print("\n -!-!-!-!-!-!-!-!-!-!-!- Menace detectee par les capteurs -!-!-!-!-!-!-!-!-!-!-!-");
+           IO`print("\n************************************************************************************************************************");
+           IO`print("\n       Distance (d), Longitude (lo) et Latitude (la) sont les suivants :  ");  IO`print("\n"); IO`print("date = "); IO`print(date); IO`print("\n");                       		
+           IO`print("         distance= "); IO`print(distance); IO`print("      longitude=");  IO`print(longitude); IO`print("      latitude=");  IO`print(latitude);                              
+           IO`print("\n************************************************************************************************************************");  
+           datas := tl datas;
+           return
+           );
+        );
+  )
+  else (fini :=false;
+        return
+       );
+ );	
+ 
+
+public estFini: () ==> ()
+estFini() ==
+  skip;
+  
+public Finir: () ==> ()
+Finir
+() ==
+  fini:= true;
+
+protected Action: () ==> ()
+Action() ==
+ (if Animation`horloge.GetTime() < Dur�eSimulation
+  then stimuli()   
+  else fini := true;     
+ );
+
+
+thread
+ (
+  while Animation`horloge.GetTime() < Dur�eSimulation 
+  do
+   (if not fini
+    then stimuli() ;		
+    Animation`horloge.WaitRelatif(1);
+   );
+  fini := true;
+ )
+sync
+ per estFini => fini;
+
+end Environnement

@@ -1,0 +1,149 @@
+
+class Controleur
+
+types   
+--type des acteurs
+public typeActeur 	= <CAPTEUR_DISTANCE> | <CAPTEUR_LONGITUDE>  | <CAPTEUR_LATITUDE> | <REGULATEUR_TEMPERATURE> | <REGULATEUR_PRESSION>| <NUL> ;
+public dispenseurs = <DISP00> | <DISP60> | <DISP120> | <DISP180> | <DISP240> | <DISP300>;
+
+instance variables
+--periode du thread
+protected periode : nat1 := 1;
+protected estPeriodique : bool := true;
+
+instance variables
+--indicateur
+private indicateur : bool := true;
+private Fini		: bool:=false; 
+
+-- le detecteur qui permet detecter s'il y a une menace
+private detecteur : Detecteur := new Detecteur();
+
+--les valeurs delivree par les capteurs
+private envDistance : nat := 0;
+private envLatitude : nat := 0;
+private envLongitude : nat := 0;
+
+-- valeurs mesures 
+private Distance : nat := 0;
+private Longitude : nat := 0;
+private Latitude : nat := 0;
+
+-- valuers cibles mesures par les capteurs
+private distanceCible	: nat;
+private longitudeCible	: nat;
+private latitudeCible	: nat; 
+
+--num�rotation des acteurs
+private ListeActeur	: map nat to typeActeur := { |-> };
+
+operations
+-- constructeur
+public Controleur: nat * nat * nat * nat1 * bool ==> Controleur
+Controleur(targetDistance, targetLongitude, targetLatitude, T, estPeriodic) ==
+ (distanceCible := targetDistance;
+  longitudeCible := targetLongitude;
+  latitudeCible := targetLatitude;
+  periode :=T;
+  estPeriodique :=estPeriodic
+ );
+
+--mise � jour des valeurs des variables Temp et Pression en fonction  des mesures donn�es par les capteurs
+public majValeurs: () ==> ()
+	majValeurs() ==
+		(
+			    Distance := SystemeRTP`leContexte.ReadDistance();
+			    Latitude := SystemeRTP`leContexte.ReadLatitude();
+				  Longitude := SystemeRTP`leContexte.ReadLongitude();
+			    --IO`print("\n  COTE CONTROLEUR:    Mesure la  temperature  t=");
+          --IO`print(Temp);
+          --IO`print(" et la pression    p=");
+          --IO`print(Pression);      
+          --IO`print("� l'instant: ");
+         -- IO`print(Animation`horloge.GetTime());				
+		);
+
+		
+--algorithme de traitement de menace en jeux un <CAPTEUR_DISTANCE>, <CAPTEUR_LATITUDE> et un <CAPTEUR_LONGITUDE>})
+private Algorithme: () ==> ()
+	Algorithme() ==
+	(dcl    dateActuelle: nat:=  Animation`horloge.GetTime();
+			    Distance := SystemeRTP`leContexte.ReadDistance();
+			    Latitude := SystemeRTP`leContexte.ReadLatitude();
+				  Longitude := SystemeRTP`leContexte.ReadLongitude();
+					
+	-- passer information de distance au detecteur pour voir si il y aune menace
+	if (detecteur.menacePresente(Distance))
+        then (
+  -- detecter type missile et activer les dispenseurs
+						(if (Longitude < 60) then (SystemeRTP`Dispenseurs.ActivateDispenseur(<DISP00>);)
+						else if (Longitude <= 120) then (SystemeRTP`Dispenseurs.ActivateDispenseur(<DISP60>);)
+						else if (Longitude <= 180) then (SystemeRTP`Dispenseurs.ActivateDispenseur(<DISP120>);)
+						else if (Longitude <= 240) then (SystemeRTP`Dispenseurs.ActivateDispenseur(<DISP180>);)
+						else if (Longitude <= 300) then (SystemeRTP`Dispenseurs.ActivateDispenseur(<DISP240>);)
+						else SystemeRTP`Dispenseurs.ActivateDispenseur(<DISP300>);	
+						indicateur := true;
+        ))
+  elseif (not detecteur.menacePresente(Distance))
+	 -- menace a ete detruite
+  then (
+        if indicateur then DateR�tablissementCibles(dateActuelle);
+        indicateur := false;
+     );
+ );
+	
+
+--affiche la date � laquelle les valeurs nominales t= 8  et p= 70 sont atteintes
+private DateR�tablissementCibles: nat ==> ()
+DateR�tablissementCibles(t) ==
+(
+ IO`print("\n**********************************************************************************************************");
+ IO`print("\n            Par action des capteurs, les valeurs cibles ont ete atteints : distance = ");
+ IO`print(SystemeRTP`leContexte.ReadDistance()); 
+ IO`print(", longitude = ");
+ IO`print(SystemeRTP`leContexte.ReadLongitude()); 
+ IO`print(", latitude = ");
+ IO`print(SystemeRTP`leContexte.ReadLatitude());
+ IO`print("%  sont r�tablies � l'instant: ");
+ IO`print(t); 
+ IO`print("\n**********************************************************************************************************"); 
+ );
+
+--pour configurer le syst�me : les capteurs et r�galateurs en pr�sence
+
+public AjouterActeur: nat * typeActeur ==> ()
+	AjouterActeur(id, type) ==
+		ListeActeur := ListeActeur ++ {id |-> type}
+		
+pre id not in set dom ListeActeur
+post card(dom ListeActeur) = card(dom ListeActeur~) + 1;
+
+
+public estFini: () ==> ()
+estFini() == 
+  skip;
+
+public Finir: () ==> ()
+Finir() == 
+  Fini := true;
+  
+--action du controleur: appel�e par le thread
+protected Action: () ==> ()
+Action() ==
+ (
+  majValeurs();
+  Algorithme();
+ );
+thread
+ (while true 
+  do
+   (Action();
+   Animation`horloge.WaitRelatif(3);
+   )
+ )
+
+sync
+per estFini => Fini;
+-- per printStr => indicateur;
+
+end Controleur

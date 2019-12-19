@@ -1,0 +1,15 @@
+
+
+class SystemeRTP
+-- classe qui configure le systeme: Pilote + 3 Capteurs + dispenseurs
+instance variables
+public static leContexte		: Contexte := new Contexte(10,71);
+--cree des instances "public static" pour permettre l'acces a partir de toutes les classes du modele  
+public static Pilote	: Controleur := new Controleur(8, 70, 30, 3,true);  -- constructeur de Controleur qui recois latitude (en degre) en parametre pour la simulation  
+public static CapteurDistance	: CapteurDistance := new CapteurDistance(1, <CAPTEUR_DISTANCE>, 10, leContexte, 3, true);  -- capteur de distance qui recois 25km comme distance cible
+public static CapteurLatitude: CapteurLatitude := new CapteurLatitude(2, <CAPTEUR_LATITUDE>, 71, leContexte, 3, true);  -- capteur de latittude qui designe l'angle depuis equatorial (entre -90° et 90°)
+public static CapteurLongitude: CapteurLongitude := new CapteurLongitude(3, <CAPTEUR_LONGITUDE>, 71, leContexte, 3, true);  -- capteur de latittude qui designe l'angle depuis equatorial (entre -90° et 90°)
+public static Dispenseurs	: Dispenseurs := new Dispenseurs(1);  -- les dispenseurs des tirs
+
+end SystemeRTP
+

@@ -1,0 +1,50 @@
+class Dispenseurs is subclass of Dispenseur
+
+types
+public typesMissile = <A> | <B> | <C>;
+
+instance variables
+public Priorite	: int;   -- priorite de type de missile
+fini	: bool := false;
+public dispenseurActive : Controleur`dispenseurs
+
+operations
+-- constructeur
+public Dispenseurs: int ==> Dispenseurs
+	Dispenseurs(priorite) ==
+		(Priorite := priorite;);
+
+-- fonction qui permet d'activer le dispenseur 
+public GetTypeMissile: () ==> typesMissile
+	GetTypeMissile() ==
+		(if (Priorite = 1) then ( return <A>)
+		else if (Priorite = 2) then (return <B>)
+		else return <C>;		
+	);	
+
+public ActivateDispenseur: Controleur`dispenseurs ==> ()
+	ActivateDispenseur(typeDispenseur) ==
+		dispenseurActive := typeDispenseur;	
+
+public Finir: () ==> ()
+Finir() ==
+  fini := true;
+
+public estFini: () ==> ()
+estFini() ==
+  skip;
+  
+protected Action: () ==> ()
+	Action() == 	   
+		  Priorite := 2;
+thread
+ while true 
+  do
+   (Action();
+   Animation`horloge.WaitRelatif(5);
+   )
+ 
+ sync
+	 per estFini => fini;
+
+end Dispenseurs
