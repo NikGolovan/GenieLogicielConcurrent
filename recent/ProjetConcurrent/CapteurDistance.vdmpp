@@ -1,0 +1,41 @@
+class CapteurDistance is subclass of Capteur
+-- la classe qui defini le capteur de distance
+
+instance variables
+	fini	: bool := false;
+
+operations
+-- constructeur
+public CapteurDistance: nat * Controleur`typeActeur * nat * Contexte * nat1 * bool ==> CapteurDistance
+CapteurDistance(id, type, val, envir, p, isP) ==
+ (ID := id;
+  Type := type;
+  Valeur := val;
+  Env := envir;
+  periode := p;
+  estPeriodique := isP;
+ );
+
+-- functions des gestion de l'etat pour les threads 
+public Finir: () ==> ()
+Finir() ==
+  fini := true;
+
+public estFini: () ==> ()
+estFini() ==
+  skip;
+
+-- Action du Capteur:  "mesurer la distance d'une menace"
+protected  Action: () ==> ()
+	Action() ==
+		Valeur := Env.ReadDistance();
+thread
+ while true 
+  do
+   (Action();
+   Animation`horloge.WaitRelatif(5);
+   )
+sync	
+  per estFini => fini;
+
+end CapteurDistance

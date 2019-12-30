@@ -1,0 +1,45 @@
+class Animation
+
+instance variables
+--determine l'environnement
+private env			: Environnement;
+public static horloge	: TimeStamp := new TimeStamp(6);
+--determine le systeme d'application
+private systemeRTP : SystemeRTP;
+
+operations
+--configuration du systeme
+public Animation: () ==> Animation
+Animation () ==
+-- instance SYSTEME D'ANIMATION
+ (
+    systemeRTP := new SystemeRTP();  
+    env := new Environnement("FlotStimuli.txt", 1, true);
+--instance des CAPTEURS du systeme Systeme
+   systemeRTP.Pilote.AjouterActeur(systemeRTP.CapteurDistance.GetID(), systemeRTP.CapteurDistance.GetType());
+	 systemeRTP.Pilote.AjouterActeur(systemeRTP.CapteurLongitude.GetID(), systemeRTP.CapteurLongitude.GetType());
+	 systemeRTP.Pilote.AjouterActeur(systemeRTP.CapteurLatitude.GetID(), systemeRTP.CapteurLatitude.GetType());
+	 --systemeRTP.Pilote.AjouterActeur(systemeRTP.Dispenseurs.GetID(), systemeRTP.Dispenseurs.GetType());
+ --lancer les threads de tous les acteurs 
+	start(systemeRTP.CapteurDistance);
+  start(systemeRTP.CapteurLongitude);
+  start(systemeRTP.CapteurLatitude);
+  start(systemeRTP.Dispenseurs);
+  start(systemeRTP.Pilote);
+	    
+ );
+
+public Simuler: () ==> ()
+Simuler() ==
+ ( 
+ --lancer la production des stimuli
+    start(env); 
+ -- attendre jusqu'au tarissement du flot de stimuli 
+  env.estFini();
+  -- afficher message fin  simulation 
+  IO`print("\n Simulation terminee  a l'instant: ");
+  IO`print(horloge.GetTime());
+ );
+
+ 
+end Animation
